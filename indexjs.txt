@@ -1,0 +1,97 @@
+
+
+Routes principales
+
+Register : http://localhost:3000/api/auth/register (post)
+Login : http://localhost:3000/api/auth/login  (post)
+Logout: http://localhost:3000/api/auth/logout (post)
+Utilisateurs: http://localhost:3000/api/auth/users  (post, get, put, delete)
+Evènements: http://localhost:3000/api/event   (post, get, put, delete)
+Prix des évènements: http://localhost:3000/api/eventPrices  (post, get, put, delete)
+
+
+
+Pour authentifier un utilisateur on fait:
+
+Créer l'utilisateur à partir d'une clée JWT. Lors de l'enregistrement de l'utilisateur, on s'assure que soit générer,
+une clée JWT qui sera utilisée pour authentifier l'utilisateur. Lors de la connexion, c'est l'une des clées précédement
+générée qui sera utilisée pour authentifier l'utilisateur.
+
+
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  email        String    @unique
+  password     String
+  role         Role      @default(USER)
+  isDeleted    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+  accessToken  String?
+  refreshToken String?
+  event        Event[]
+  comments     Comment[]
+}
+
+model Event {
+  id          Int          @id @default(autoincrement())
+  userId      Int
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  eventName   String
+  eventDate   DateTime
+  eventLocate String
+  toTickets   Int?
+  numbTickets Int?
+  boost       Boost[]
+  categorie   Categorie[]
+  comments    Comment[]
+  tickets     Tickets[]
+}
+
+model Boost {
+  id      Int   @id @default(autoincrement())
+  boost   Int?
+  eventId Int
+  event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Categorie {
+  id      Int    @id @default(autoincrement())
+  name    String
+  eventId Int
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Tickets {
+  id         String      @id @default(uuid())
+  eventId    Int
+  event      Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  expireDate DateTime
+  type       Type[]
+  qrCode     String
+}
+
+model Type{
+  id          Int    @id @default(autoincrement())
+  name        String
+  ticketsId   String
+  tickets     Tickets  @relation(fields: [ticketsId], references: [id], onDelete: Cascade)
+  price       Int
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  eventId   Int?
+  userId    Int?
+  message   String
+  createdAt DateTime @default(now())
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
+  PROMOTEUR
+}

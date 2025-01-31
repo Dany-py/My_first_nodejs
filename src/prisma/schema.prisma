@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id                Int         @id @default(autoincrement())
+  name              String
+  email             String      @unique
+  password          String
+  role              Role        @default(USER)
+  isDeleted         Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime?   @updatedAt
+  accessToken       String?
+  refreshToken      String?
+  event             Event[]
+  comments          Comment[]
+}
+
+model Event {
+  id                Int          @id @default(autoincrement())
+  userId            Int
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime     @default(now())
+  eventName         String
+  eventDate         DateTime
+  eventLocate       String
+  boost             Boost[]
+  categorie         Categorie[]
+  comments          Comment[]
+  tickets           Tickets[]
+}
+
+model Boost {
+  id                Int           @id @default(autoincrement())
+  boost             Int?
+  eventId           Int
+  event             Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Categorie {
+  id                Int           @id @default(autoincrement())
+  name              String
+  eventId           Int
+  event             Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Tickets {
+  id                String        @id @default(uuid())
+  eventId           Int
+  event             Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  expireDate        DateTime
+  type              Type[]
+  qrCode            String
+  totalTickets      Int?
+  soldTickets       Int?
+  leftTickets       Int?
+}
+
+model Type {
+  id                Int           @id @default(autoincrement())
+  name              String
+  ticketsId         String
+  tickets           Tickets       @relation(fields: [ticketsId], references: [id], onDelete: Cascade)
+  price             Int
+}
+
+model Comment {
+  id                Int           @id @default(autoincrement())
+  eventId           Int?
+  userId            Int?
+  message           String
+  createdAt         DateTime      @default(now())
+  event             Event?        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user              User?         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  USER
+  ADMIN
+  PROMOTEUR
+}
